@@ -1,0 +1,16 @@
+steps:
+- name: gcr.io/cloud-builders/docker
+  args: ["build","-t","africa-south1-docker.pkg.dev/$PROJECT_ID/vendora-docker/backend:$BUILD_ID","./backend"]
+- name: gcr.io/cloud-builders/docker
+  args: ["push","africa-south1-docker.pkg.dev/$PROJECT_ID/vendora-docker/backend:$BUILD_ID"]
+- name: gcr.io/google.com/cloudsdktool/cloud-sdk
+  entrypoint: gcloud
+  args: ["run","deploy","vendora-backend",
+         "--image=africa-south1-docker.pkg.dev/$PROJECT_ID/vendora-docker/backend:$BUILD_ID",
+         "--region=africa-south1",
+         "--service-account=vendora-backend-sa@$PROJECT_ID.iam.gserviceaccount.com",
+         "--allow-unauthenticated",
+         "--set-secrets=DJANGO_SECRET_KEY=vendora-django-secret:latest",
+         "--update-env-vars=DJANGO_SETTINGS_MODULE=vendora_backend.settings",
+         "--port=8000"]
+images: ["africa-south1-docker.pkg.dev/$PROJECT_ID/vendora-docker/backend:$BUILD_ID"]

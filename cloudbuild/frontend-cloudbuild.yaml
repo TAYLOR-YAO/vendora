@@ -1,0 +1,22 @@
+steps:
+- name: gcr.io/cloud-builders/npm
+  dir: frontend
+  args: ["install"]
+- name: gcr.io/cloud-builders/npm
+  dir: frontend
+  args: ["run","build"]
+- name: gcr.io/cloud-builders/docker
+  args: ["build","-t","africa-south1-docker.pkg.dev/$PROJECT_ID/vendora-docker/frontend:$BUILD_ID","./frontend"]
+- name: gcr.io/cloud-builders/docker
+  args: ["push","africa-south1-docker.pkg.dev/$PROJECT_ID/vendora-docker/frontend:$BUILD_ID"]
+- name: gcr.io/google.com/cloudsdktool/cloud-sdk
+  entrypoint: gcloud
+  args: ["run","deploy","vendora-frontend",
+         "--image=africa-south1-docker.pkg.dev/$PROJECT_ID/vendora-docker/frontend:$BUILD_ID",
+         "--region=africa-south1",
+         "--service-account=vendora-frontend-sa@$PROJECT_ID.iam.gserviceaccount.com",
+         "--allow-unauthenticated",
+         "--update-env-vars=NEXT_PUBLIC_API_BASE=${_NEXT_PUBLIC_API_BASE}",
+         "--port=3000"]
+images: ["africa-south1-docker.pkg.dev/$PROJECT_ID/vendora-docker/frontend:$BUILD_ID"]
+substitutions: {_NEXT_PUBLIC_API_BASE: "https://REPLACE_WITH_BACKEND_URL"}

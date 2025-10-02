@@ -1,0 +1,22 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: vendora-backend
+spec:
+  template:
+    metadata:
+      annotations:
+        run.googleapis.com/ingress: all
+    spec:
+      serviceAccountName: vendora-backend-sa@${PROJECT_ID}.iam.gserviceaccount.com
+      containers:
+        - image: africa-south1-docker.pkg.dev/${PROJECT_ID}/vendora-docker/backend:${BUILD_ID}
+          ports: [{containerPort: 8000}]
+          env:
+            - name: DJANGO_SETTINGS_MODULE
+              value: vendora_backend.settings
+            - name: DJANGO_DEBUG
+              value: "false"
+            - name: NEXT_PUBLIC_PLACEHOLDER
+              value: "ok"
+          envFrom: []
