@@ -1,22 +1,42 @@
-FROM python:3.12-slim
-ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
-WORKDIR /app
+# --- Builder Stage ---
+# This stage installs dependencies into a virtual environment.
+FROM python:3.12-slim as builder
 
-# system deps (time zone only)
-RUN apt-get update && apt-get install -y tzdata && rm -rf /var/lib/apt/lists/*
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
 
-# install python deps
+# Create a virtual environment
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Install dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# copy app source into the image
-COPY . .
 
-# bake static files into the image (WhiteNoise will serve them)
-ENV DJANGO_SETTINGS_MODULE=vendora_backend.settings.prod
-ARG DJANGO_SECRET_KEY=dummy
-ENV DJANGO_SECRET_KEY=$DJANGO_SECRET_KEY
-RUN DJANGO_SETTINGS_MODULE=vendora_backend.settings.base python -m django collectstatic --noinput
+# --- Runtime Stage ---
+# This stage copies the installed dependencies and source code into a clean image.
+FROM python:3.12-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+# Copy the virtual environment from the builder stage
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Create a non-root user to run the application
+RUN addgroup --system django && adduser --system --ingroup django django
+
+# Copy application source
+COPY . .
+RUN chown -R django:django /app
 
 EXPOSE 8000
+
+# Switch to the non-root user
+USER django
+
 CMD ["gunicorn","-b","0.0.0.0:8000","vendora_backend.wsgi:application"]

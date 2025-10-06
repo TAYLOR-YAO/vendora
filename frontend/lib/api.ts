@@ -1,6 +1,18 @@
-const base = process.env.NEXT_PUBLIC_API_BASE || '';
-export async function api(path: string, opts: RequestInit = {}) {
-  const res = await fetch(base + path, { ...opts, headers: { 'Content-Type': 'application/json', ...(opts.headers||{}) } });
-  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-  return res.json();
-}
+// frontend/lib/api.ts
+import axios from 'axios';
+
+const api = axios.create({
+  baseURL: '/api/b',
+  headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+});
+
+// optional: normalize trailing slash on /api/... paths
+api.interceptors.request.use((config) => {
+  if (config.url?.startsWith('/api/') && !config.url.endsWith('/')) {
+    const [path, qs] = config.url.split('?');
+    config.url = path + '/' + (qs ? `?${qs}` : '');
+  }
+  return config;
+});
+
+export default api;

@@ -1,7 +1,21 @@
-Django==5.0.6
-djangorestframework==3.15.2
-django-cors-headers==4.4.0
+# requirements.txt  (excerpt)
+Django==5.0.7
 gunicorn==22.0.0
-drf-spectacular==0.27.2
 whitenoise==6.7.0
-psycopg[binary]==3.1.19
+psycopg[binary]==3.1.19   # fine to keep for non-dev, it won’t be used by SQLite
+djangorestframework==3.15.2
+drf-spectacular==0.27.2
+django-cors-headers==4.4.0
+django-filter>=24.2
+celery==5.4.0
+redis==5.0.7
+django-celery-beat==2.6.0
+djangorestframework-simplejwt==5.3.1
+dj-rest-auth[with_social]>=2.2.0
+# ML for aiapp
+numpy>=1.26,<2
+scipy>=1.11
+scikit-learn==1.4.2
+joblib>=1.4.2
+
+opensearch-py>=2.3.0

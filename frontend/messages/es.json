@@ -1,0 +1,33 @@
+{
+  "LoginPage": {
+    "title": "Inicia sesión en tu cuenta",
+    "emailLabel": "Correo electrónico",
+    "passwordLabel": "Contraseña",
+    "submitButton": "Iniciar sesión",
+    "registerPrompt": "¿No tienes una cuenta?",
+    "registerLink": "Regístrate"
+  },
+  "RegisterPage": {
+    "title": "Crear una cuenta",
+    "usernameLabel": "Nombre de usuario",
+    "fullNameLabel": "Nombre completo",
+    "emailLabel": "Correo electrónico",
+    "passwordLabel": "Contraseña",
+    "submitButton": "Crear cuenta",
+    "loginPrompt": "¿Ya tienes una cuenta?",
+    "loginLink": "Iniciar sesión"
+  },
+  "Dashboard": {
+    "welcome": "Bienvenido",
+    "products": "Productos"
+  },
+  "ProductsPage": {
+    "title": "Productos",
+    "description": "Administra tus productos.",
+    "table": {
+      "name": "Nombre",
+      "price": "Precio",
+      "status": "Estado"
+    }
+  }
+}

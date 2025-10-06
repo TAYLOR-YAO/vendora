@@ -1,10 +1,10 @@
 from rest_framework.routers import DefaultRouter
 from django.urls import path, include
-from .views import PickupCenterViewSet
-from .views import ShipmentViewSet
+from .views import ShipmentViewSet, ShipmentItemViewSet, PickupCenterViewSet
 
-router = DefaultRouter()
-router.register(r'pickupcenter', PickupCenterViewSet)
-router.register(r'shipment', ShipmentViewSet)
+router = DefaultRouter(trailing_slash=False)
+router.register(r'shipment', ShipmentViewSet, basename='shipment')
+router.register(r'shipmentitem', ShipmentItemViewSet, basename='shipmentitem')
+router.register(r'pickupcenter', PickupCenterViewSet, basename='pickupcenter')
 
-urlpatterns = [ path('', include(router.urls)) ]
+urlpatterns = [path('', include(router.urls))]

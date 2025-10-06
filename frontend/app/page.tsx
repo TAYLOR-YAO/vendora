@@ -1,1 +1,6 @@
-export default function Page(){return(<div><h1>Vendora</h1><p>Frontend is live.</p></div>)}
+// app/page.tsx
+import { redirect } from "next/navigation";
+
+export default function Index() {
+  redirect("/en"); // or compute preferred locale
+}

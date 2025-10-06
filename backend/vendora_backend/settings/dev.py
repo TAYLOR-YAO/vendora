@@ -1,12 +1,29 @@
+# backend/vendora_backend/settings/dev.py
 from .base import *
 
-# Dev mode (Cloud Shell)
 DEBUG = True
 
-# In dev, allow anything hitting the dev server (adjust if you want stricter)
-if not ALLOWED_HOSTS:
-    ALLOWED_HOSTS = ["*"]
+# Put our dev preflight middleware at the VERY TOP
+MIDDLEWARE = [
+    "core.middleware.DevCORSPreflightMiddleware",
+] + MIDDLEWARE
 
-# Dev-only convenience (optional)
-SESSION_COOKIE_SECURE = False
-CSRF_COOKIE_SECURE = False
+ALLOWED_HOSTS = ["*", "localhost", "127.0.0.1"]
+
+# The frontend origin
+FRONTEND_ORIGIN = "https://3002-cs-225507065464-default.cs-us-east1-pkhd.cloudshell.dev"
+# The backend origin (where the API is served)
+BACKEND_ORIGIN = "https://8080-cs-225507065464-default.cs-us-east1-pkhd.cloudshell.dev"
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://*.cloudshell.dev",
+    FRONTEND_ORIGIN,
+    BACKEND_ORIGIN,
+]
+
+# Use a specific allow-list for CORS instead of allowing all origins.
+CORS_ALLOWED_ORIGINS = [FRONTEND_ORIGIN, BACKEND_ORIGIN]
+
+DATABASES = {
+    "default": {"ENGINE": "django.db.backends.sqlite3", "NAME": str(BASE_DIR / "db.sqlite3")}
+}

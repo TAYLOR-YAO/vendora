@@ -1,4 +1,7 @@
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-router=DefaultRouter()
-urlpatterns=[path('', include(router.urls))]
+from django.urls import path
+from .views import RegisterView, GoogleLoginView
+
+urlpatterns = [
+    path("register/", RegisterView.as_view(), name="auth_register"),
+    path("google/", GoogleLoginView.as_view(), name="google_login"),
+]
