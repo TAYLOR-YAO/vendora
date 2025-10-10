@@ -80,3 +80,28 @@ class PrivateTenantOnly(BasePermission):
             # Still private: require auth + tenant even for reads in CRM
             return bool(request.user and request.user.is_authenticated and request.headers.get("X-Tenant-ID"))
         return bool(request.user and request.user.is_authenticated and request.headers.get("X-Tenant-ID"))
+
+
+# common/permissions.py
+from rest_framework.permissions import BasePermission, SAFE_METHODS
+
+class HasDjangoPerm(BasePermission):
+    """
+    Map methods -> perms. Use on viewsets or function views.
+    """
+    perms_map = {
+        "GET":    [],                      # fill in view perms if needed
+        "HEAD":   [],
+        "OPTIONS":[],
+        "POST":   [],                      # add_*
+        "PUT":    [],                      # change_*
+        "PATCH":  [],                      # change_*
+        "DELETE": [],                      # delete_*
+    }
+
+    def has_permission(self, request, view):
+        if request.method in SAFE_METHODS:
+            required = getattr(view, "required_view_perms", [])
+        else:
+            required = getattr(view, "required_write_perms", [])
+        return all(request.user.has_perm(p) for p in required)
