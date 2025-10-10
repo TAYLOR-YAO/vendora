@@ -1,83 +1,58 @@
+# File: backend/vendora_backend/urls.py
 from django.contrib import admin
 from django.urls import path, include
 from django.http import JsonResponse, HttpResponse
 from django.views.generic import RedirectView
-from django.utils.translation import gettext_lazy as _
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerSplitView
+from rest_framework.renderers import TemplateHTMLRenderer, StaticHTMLRenderer
 
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from .api_router import router as api_v1_router
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenVerifyView
-from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
-
-
-class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
-    @classmethod
-    def get_token(cls, user):
-        token = super().get_token(user)
-        token['full_name'] = getattr(user, 'full_name', '')
-        return token
-
-# ⬇️ Add CORS-safe subclasses that implement .options()
-class TokenObtainPairCORSView(TokenObtainPairView):
-    def options(self, request, *args, **kwargs):
-        # 204 is a common/no-body preflight response
-        return HttpResponse(status=204)
-
-class TokenRefreshCORSView(TokenRefreshView):
-    def options(self, request, *args, **kwargs):
-        return HttpResponse(status=204)
-
+from vendora_backend.ping_view import ping
+from django.views.decorators.csrf import ensure_csrf_cookie
 
 def root(_r):
     return JsonResponse({
-        "service": _("vendora-backend"),
-        "docs": _("/api/docs"),
-        "health": _("/api/v1/core/healthz/"),
+        "service": "vendora-backend",
+        "docs": "/api/docs",
+        "health": "/api/v1/core/healthz/",
     })
 
+def csrf_ok(_request):
+    return JsonResponse({"ok": True})
 
 urlpatterns = [
-    path("admin", RedirectView.as_view(url="/admin/", permanent=False)),  # <— add this
+    path("ping/", ping),
+    path("admin", RedirectView.as_view(url="/admin/", permanent=False)),
     path("admin/", admin.site.urls),
+    path("auth/csrf/", ensure_csrf_cookie(csrf_ok), name="auth_csrf"),
 
     # API docs
-    path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
-    path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="docs"),
+    path("api/schema/", SpectacularAPIView.as_view(), name="schema"),    
+    path("api/docs/", SpectacularSwaggerSplitView.as_view(
+        url_name="schema",
+        renderer_classes=[TemplateHTMLRenderer, StaticHTMLRenderer]
+    ), name="swagger-ui"),
 
-    # App routers
-    path("api/v1/search/", include("searchapp.urls")),
-    path("api/v1/billing/", include("billing.urls")),
+    # Feature routers
     path("api/v1/core/", include("core.urls")),
     path("api/v1/platform/", include("platformapp.urls")),
-    path("api/v1/identity/", include("identity.urls")),
-    path("api/v1/taxonomy/", include("taxonomy.urls")),
-    path("api/v1/business/", include("business.urls")),
-    path("api/v1/crm/", include("crm.urls")),
-    path("api/v1/commerce/", include("commerce.urls")),
-    path("api/v1/payments/", include("payments.urls")),
-    path("api/v1/inventory/", include("inventory.urls")),
-    path("api/v1/shipments/", include("shipments.urls")),
-    path("api/v1/hr/", include("hr.urls")),
-    path("api/v1/invoicing/", include("invoicing.urls")),
-    path("api/v1/appointments/", include("appointments.urls")),
-    path("api/v1/notifications/", include("notificationsapp.urls")),
-    path("api/v1/support/", include("support.urls")),
-    path("api/v1/marketing/", include("marketing.urls")),
-    path("api/v1/analytics/", include("analyticsapp.urls")),
-    path("api/v1/ai/", include("aiapp.urls")),
+    path("api/v1/identity/", include("identity.urls")),  # optional, if you expose identity features under api too
 
-    # SimpleJWT (now OPTIONS-safe)
-    path(
-        "api/token/",
-        TokenObtainPairCORSView.as_view(serializer_class=MyTokenObtainPairSerializer),
-        name="token_obtain_pair",
-    ),
-    path("api/token/refresh/", TokenRefreshCORSView.as_view(), name="token_refresh"),
+    # Auto-generated tenant-scoped APIs for all business apps
+    path("api/v1/", include(api_v1_router.urls)),
+
+    # 🔐 Identity (clean surface for frontend)
+    path("auth/", include(("identity.urls", "identity"), namespace="auth")),
+
+    # (Optional) Keep dj-rest-auth and registration endpoints (JWT flow)
+    # path("dj-rest-auth/", include("dj_rest_auth.urls")),
+    # path("dj-rest-auth/registration/", include("dj_rest_auth.registration.urls")),
+
+    # SimpleJWT
+    path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("api/token/verify/", TokenVerifyView.as_view(), name="token_verify"),
 
-    # dj-rest-auth (optional; unrelated to SimpleJWT flow)
-    #path("dj-rest-auth/", include("dj_rest_auth.urls")),
-    #path("dj-rest-auth/registration/", include("dj_rest_auth.registration.urls")),
-
-    # Put root last
     path("", root),
 ]
